@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException, Logger, ServiceUnavailableException, GatewayTimeoutException } from '@nestjs/common';
 import puppeteer from 'puppeteer';
-import puppeteerCore from 'puppeteer-core';
+import puppeteerCore, {type Browser} from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class PdfService {
     }
     this.activeGenerations++;
 
-    let browser: Awaited<ReturnType<typeof puppeteer.launch>> | undefined;
+    let browser: Browser | undefined;
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     let timedOut = false;
 

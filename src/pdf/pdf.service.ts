@@ -1,5 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger, ServiceUnavailableException, GatewayTimeoutException } from '@nestjs/common';
 import puppeteer from 'puppeteer';
+import puppeteerCore from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 
 @Injectable()
 export class PdfService {
@@ -24,11 +26,23 @@ export class PdfService {
 
     try {
       const generation = (async (): Promise<Buffer> => {
-        browser = await puppeteer.launch({
-          headless: true,
-          timeout: this.browserLaunchTimeoutMs,
-          //args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
+
+        if(process.env.VERCEL === '1'){
+          browser = await puppeteerCore.launch({
+            args: chromium.args,
+            executablePath: await chromium.executablePath(),
+            headless: true,
+            timeout: this.browserLaunchTimeoutMs,
+            //args: ['--no-sandbox', '--disable-setuid-sandbox']
+          });
+
+        } else {
+           browser = await puppeteer.launch({
+            headless: true,
+            timeout: this.browserLaunchTimeoutMs,
+            //args: ['--no-sandbox', '--disable-setuid-sandbox']
+          });
+        }
 
         if(timedOut) {
           await browser.close();

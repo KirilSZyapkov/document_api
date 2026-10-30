@@ -26,14 +26,14 @@ export class RapidApiGuard implements CanActivate {
 
     const receivedSecret = request.headers['x-rapidapi-proxy-secret'];
 
-    if(typeof receivedSecret !=='string' || receivedSecret.length !== expectedSecret.length) {
+    if(typeof receivedSecret !=='string') {
       throw new UnauthorizedException('Invalid API credentials.');
     };
 
     const receivedBuffer = Buffer.from(receivedSecret, 'utf8');
     const expectedBuffer = Buffer.from(expectedSecret, 'utf8');
 
-    if(!timingSafeEqual(receivedBuffer, expectedBuffer)){
+    if(receivedBuffer.length !== expectedBuffer.length || !timingSafeEqual(receivedBuffer, expectedBuffer)){
       throw new UnauthorizedException('Invalid API credentials.')
     }
 

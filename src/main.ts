@@ -5,12 +5,9 @@ import express from 'express';
 
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ExpressAdapter } from '@nestjs/platform-express';
-
-const server = express();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
+  const app = await NestFactory.create(AppModule, {
     bodyParser: false,
   });
 
@@ -36,16 +33,14 @@ async function bootstrap() {
 
   SwaggerModule.setup('docs', app, document);
 
-  await app.init();
-  // const configService = app.get(ConfigService);
-  // const port = Number(configService.get<number>('PORT') ?? 3000);
+  
+  const configService = app.get(ConfigService);
+  const port = Number(configService.get<number>('PORT') ?? 3000);
 
-  // if(!Number.isInteger(port) || port <1 || port > 65535) {
-  //   throw new Error('PORT must be a valid integer between 1 and 65535');
-  // };
+  if(!Number.isInteger(port) || port <1 || port > 65535) {
+    throw new Error('PORT must be a valid integer between 1 and 65535');
+  };
 
-  // await app.listen(port, () => console.log("Server running on port: http://localhost:3000/"));
+  await app.listen(port, () => console.log("Server running on port: http://localhost:3000/"));
 }
 await bootstrap();
-
-export default server;

@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException, Logger, ServiceUnavailableException, GatewayTimeoutException } from '@nestjs/common';
 import puppeteer from 'puppeteer';
-import puppeteerCore, {type Browser} from 'puppeteer-core';
+import puppeteerCore, { type Browser } from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
 @Injectable()
@@ -27,7 +27,7 @@ export class PdfService {
     try {
       const generation = (async (): Promise<Buffer> => {
 
-        if(process.env.VERCEL === '1'){
+        if (process.env.VERCEL === '1') {
           browser = await puppeteerCore.launch({
             args: chromium.args,
             executablePath: await chromium.executablePath(),
@@ -37,24 +37,24 @@ export class PdfService {
           });
 
         } else {
-           browser = await puppeteer.launch({
+          browser = await puppeteer.launch({
             headless: true,
             timeout: this.browserLaunchTimeoutMs,
             //args: ['--no-sandbox', '--disable-setuid-sandbox']
           });
         }
 
-        if(timedOut) {
+        if (timedOut) {
           await browser.close();
           throw new Error('PDF generation time out.')
         }
 
         const page = await browser.newPage();
         await page.setRequestInterception(true);
-        
+
         page.on('request', (request) => {
           const url = request.url();
-  
+
           if (
             url.startsWith('data:') ||
             url.startsWith('blob:') ||
@@ -67,29 +67,29 @@ export class PdfService {
         });
 
 
-        
-              await page.setContent(html, {
-                waitUntil: 'load',
-                timeout: 15000,
-              });
-        
-              const pdf = await page.pdf({
-                format: 'A4',
-                printBackground: true,
-                preferCSSPageSize: true
-              })
-        
-              return Buffer.from(pdf);
+
+        await page.setContent(html, {
+          waitUntil: 'load',
+          timeout: 15000,
+        });
+
+        const pdf = await page.pdf({
+          format: 'A4',
+          printBackground: true,
+          preferCSSPageSize: true
+        })
+
+        return Buffer.from(pdf);
       })();
 
-      const timeout = new Promise<never>((_, reject)=> {
-        timeoutId = setTimeout(()=> {
+      const timeout = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
           timedOut = true;
 
           reject(new Error('PDF generation timed out.'));
 
-          if(browser){
-            void browser.close().catch((error: unknown)=> {
+          if (browser) {
+            void browser.close().catch((error: unknown) => {
               this.logger.error(
                 'Failed to stop timed-out Puppeteer browser.',
                 error instanceof Error ? error.stack : String(error),
@@ -102,20 +102,25 @@ export class PdfService {
       return await Promise.race([generation, timeout]);
 
     } catch (error) {
-      if(timedOut) {
+      this.logger.error(
+        "PDF generation faild.",
+        error instanceof Error ? error.stack : String(error)
+      )
+
+      if (timedOut) {
         throw new GatewayTimeoutException(
           'PDF generation timed out. Please try again.'
         );
       }
 
-      throw new InternalServerErrorException (
+      throw new InternalServerErrorException(
         'Failed to generate PDF document.'
       )
     } finally {
-      if(timeoutId) {
+      if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      
+
       if (browser) {
         try {
           await browser.close();

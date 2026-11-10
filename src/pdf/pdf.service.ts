@@ -1,5 +1,4 @@
 import { Injectable, InternalServerErrorException, Logger, ServiceUnavailableException, GatewayTimeoutException } from '@nestjs/common';
-import puppeteer from 'puppeteer';
 import puppeteerCore, { type Browser } from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
@@ -27,22 +26,29 @@ export class PdfService {
     try {
       const generation = (async (): Promise<Buffer> => {
 
-        if (process.env.VERCEL === '1') {
-          browser = await puppeteerCore.launch({
-            args: chromium.args,
-            executablePath: await chromium.executablePath(),
-            headless: true,
-            timeout: this.browserLaunchTimeoutMs,
-            //args: ['--no-sandbox', '--disable-setuid-sandbox']
-          });
+        // if (process.env.VERCEL === '1') {
+        //   browser = await puppeteerCore.launch({
+        //     args: chromium.args,
+        //     executablePath: await chromium.executablePath(),
+        //     headless: true,
+        //     timeout: this.browserLaunchTimeoutMs,
+        //     //args: ['--no-sandbox', '--disable-setuid-sandbox']
+        //   });
 
-        } else {
-          browser = await puppeteer.launch({
-            headless: true,
-            timeout: this.browserLaunchTimeoutMs,
-            //args: ['--no-sandbox', '--disable-setuid-sandbox']
-          });
-        }
+        // } else {
+        //   browser = await puppeteer.launch({
+        //     headless: true,
+        //     timeout: this.browserLaunchTimeoutMs,
+        //     //args: ['--no-sandbox', '--disable-setuid-sandbox']
+        //   });
+        // }
+
+        browser = await puppeteerCore.launch({
+          args: chromium.args,
+          executablePath: await chromium.executablePath(),
+          headless: true,
+          timeout: this.browserLaunchTimeoutMs
+        })
 
         if (timedOut) {
           await browser.close();
